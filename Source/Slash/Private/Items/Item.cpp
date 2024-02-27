@@ -13,26 +13,37 @@ AItem::AItem()
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	UWorld* World = GetWorld();
-
-	SetActorLocation(FVector(0.f, 0.f, 50.f));
-	SetActorRotation(FRotator(0.f, 45.f, 0.f));
-
-	FVector Location = GetActorLocation();
-	FVector Forward = GetActorForwardVector();
-
-	DRAW_SPHERE(Location);
-	// DRAW_LINE(Location, Location + Forward * 100.f);
-	// DRAW_POINT(Location + Forward * 100.f);
-	DRAW_VECTOR(Location, Location + Forward * 100.f);
 
 
+
+}
+
+float AItem::TransformedSin()
+{
+	return Amplitude * FMath::Sin(RunningTime * TimeConstant);
+}
+
+float AItem::TransformedCos()
+{
+	return Amplitude * FMath::Cos(RunningTime * TimeConstant);
 }
 
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	RunningTime += DeltaTime;
+
+	// float DeltaZ = Amplitude * FMath::Sin(RunningTime * TimeConstant);
+
+	// AddActorWorldOffset(FVector(0.f, 0.f, DeltaZ));
+
+	DRAW_SPHERE_SingleFrame(GetActorLocation());
+	DRAW_VECTOR_SingleFrame(GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 100.f);
+
+	FVector AvgVector = Avg<FVector>(GetActorLocation(), FVector::ZeroVector);
+	DRAW_POINT_SingleFrame(AvgVector);
+	
 }
 
 
