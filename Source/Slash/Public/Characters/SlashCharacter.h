@@ -9,7 +9,8 @@
 #include "SlashCharacter.generated.h"
 
 class UInputMappingContext;
-
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -30,6 +31,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MovementAction;
 
-	void Move(const FInputActionValue& Value);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LookAction;
 
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	
+private:
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* ViewCamera;
 };
