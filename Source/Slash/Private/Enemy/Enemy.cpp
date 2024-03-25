@@ -49,7 +49,7 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::GetHit(const FVector& ImpactPoint)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 {
 	//DRAW_SPHERE_COLOR(ImpactPoint, FColor::Orange);
 
@@ -84,7 +84,7 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 	const double CosTheta = FVector::DotProduct(Forward, ToHit);
 	// Take the inverse cosine (arc-cosine) of cos(theta) to get theta
 	double Theta = FMath::Acos(CosTheta);
-	// convert fram radians to degrees
+	// convert from radians to degrees
 	Theta = FMath::RadiansToDegrees(Theta);
 
 	// if CrossProduct points down, Theta should be negative
