@@ -8,6 +8,7 @@
 #include "BreakableActor.generated.h"
 
 class UGeometryCollectionComponent;
+class UCapsuleComponent;
 
 UCLASS()
 class SLASH_API ABreakableActor : public AActor, public IHitInterface
@@ -24,8 +25,16 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UGeometryCollectionComponent* GeometryCollection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UCapsuleComponent* Capsule;
 
 private:	
-	UPROPERTY(VisibleAnywhere)
-	UGeometryCollectionComponent* GeometryCollection;
+	
+
+	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
+	TSubclassOf<class ATreasure> TreasureClass;
 };
