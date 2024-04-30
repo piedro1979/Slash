@@ -10,6 +10,7 @@
 #include "Components/AttributeComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AIController.h"
 
 AEnemy::AEnemy()
 {
@@ -31,6 +32,11 @@ AEnemy::AEnemy()
 	bUseControllerRotationRoll = false;
 }
 
+void AEnemy::PatrolTimerFinished()
+{
+	MoveToTarget(PatrolTarget);
+}
+
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
@@ -38,6 +44,10 @@ void AEnemy::BeginPlay()
 	{
 		HealthBarWidget->SetVisibility(false);
 	}
+
+	EnemyController = Cast<AAIController>(GetController());
+	
+	MoveToTarget(PatrolTarget);
 }
 
 void AEnemy::Die()
@@ -88,6 +98,44 @@ void AEnemy::Die()
 	SetLifeSpan(3.f);
 }
 
+bool AEnemy::InTargetRange(AActor* Target, double Radius)
+{
+	if (Target == nullptr) return false;
+	const double DistanceToTarget = (Target->GetActorLocation() - GetActorLocation()).Size();
+	DRAW_SPHERE_SingleFrame(GetActorLocation());
+	DRAW_SPHERE_SingleFrame(Target->GetActorLocation());
+	return DistanceToTarget <= Radius;
+}
+
+void AEnemy::MoveToTarget(AActor* Target)
+{
+	if (EnemyController == nullptr || Target == nullptr) return;
+	FAIMoveRequest MoveRequest;
+	MoveRequest.SetGoalActor(Target);
+	MoveRequest.SetAcceptanceRadius(15.f);
+	EnemyController->MoveTo(MoveRequest);
+}
+
+AActor* AEnemy::ChoosePatrolTarget()
+{
+	TArray<AActor*> ValidTargets;
+	for (AActor* Target : PatrolTargets)
+	{
+		if (Target != PatrolTarget)
+		{
+			ValidTargets.AddUnique(Target);
+		}
+	}
+
+	const int32 NumPatrolTargets = ValidTargets.Num();
+	if (NumPatrolTargets > 0)
+	{
+		const int32 TargetSelection = FMath::RandRange(0, NumPatrolTargets - 1);
+		return ValidTargets[TargetSelection];
+	}
+	return nullptr;
+}
+
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -102,16 +150,30 @@ void AEnemy::PlayHitReactMontage(const FName& SectionName)
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (CombatTarget)
+	
+	CheckCombatTarget();
+	CheckPatrolTarget();
+}
+
+void AEnemy::CheckPatrolTarget()
+{
+	if (InTargetRange(PatrolTarget, PatrolRadius))
 	{
-		const double DistanceToTarget = (CombatTarget->GetActorLocation() - GetActorLocation()).Size();
-		if (DistanceToTarget > CombatRadius)
+		PatrolTarget = ChoosePatrolTarget();
+		const float WaitTime = FMath::RandRange(WaitMin, WaitMax);
+		GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::PatrolTimerFinished, WaitTime);
+
+	}
+}
+
+void AEnemy::CheckCombatTarget()
+{
+	if (!InTargetRange(CombatTarget, CombatRadius))
+	{
+		CombatTarget = nullptr;
+		if (HealthBarWidget)
 		{
-			CombatTarget = nullptr;
-			if (HealthBarWidget)
-			{
-				HealthBarWidget->SetVisibility(false);
-			}
+			HealthBarWidget->SetVisibility(false);
 		}
 	}
 }
